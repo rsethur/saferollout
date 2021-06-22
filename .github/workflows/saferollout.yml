@@ -88,7 +88,7 @@ jobs:
         fi
     - name: Step 2-Create RC deployment
       run: |          
-        az ml endpoint update -n ${{ github.event.inputs.endpoint_name }} --deployment ${{ github.event.inputs.RC_DEPLOYMENT_NAME }} --deployment-file ${{ env.DEPLOYMENT_FILE }} --set deployments[${{ env.NUM_DEPLOYMENTS }}].model=${{ github.event.inputs.rc_model }} --traffic "{{ env.PROD_DEPLOYMENT}}:100,${{ github.event.inputs.RC_DEPLOYMENT_NAME }}:0"
+        az ml endpoint update -n ${{ github.event.inputs.endpoint_name }} --deployment ${{ github.event.inputs.RC_DEPLOYMENT_NAME }} --deployment-file ${{ env.DEPLOYMENT_FILE }} --set deployments[${{ env.NUM_DEPLOYMENTS }}].model=${{ github.event.inputs.rc_model }} --traffic "{{ env.PROD_DEPLOYMENT }}:100,${{ github.event.inputs.RC_DEPLOYMENT_NAME }}:0"
  
     - name: Step 3-Divert 10% traffic
       run: | 
@@ -99,8 +99,8 @@ jobs:
 
     - name: Step 4-Rollout 100% traffic to RC & mark RC as PROD
       run: | 
-        az ml endpoint update -n ${{ github.event.inputs.endpoint_name }}  --traffic {{ env.PROD_DEPLOYMENT}}:0,${{ github.event.inputs.RC_DEPLOYMENT_NAME }}:100 --set tags.PROD_DEPLOYMENT=${{ github.event.inputs.RC_DEPLOYMENT_NAME }}
-        export OLD_PROD_DEPLOYMENT={{ env.PROD_DEPLOYMENT}}
+        az ml endpoint update -n ${{ github.event.inputs.endpoint_name }}  --traffic {{ env.PROD_DEPLOYMENT }}:0,${{ github.event.inputs.RC_DEPLOYMENT_NAME }}:100 --set tags.PROD_DEPLOYMENT=${{ github.event.inputs.RC_DEPLOYMENT_NAME }}
+        export OLD_PROD_DEPLOYMENT={{ env.PROD_DEPLOYMENT }}
         export PROD_DEPLOYMENT=${{ github.event.inputs.RC_DEPLOYMENT_NAME }}
 
     - name: Step 5-Delete OLD_PROD_DEPLOYMENT deployment
