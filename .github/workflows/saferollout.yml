@@ -80,7 +80,8 @@ jobs:
         if [[ -z "$PROD_DEPLOYMENT" ]]; then
           export PROD_DEPLOYMENT=${{ github.event.inputs.RC_DEPLOYMENT_NAME }}  
           az ml endpoint update -n ${{ github.event.inputs.endpoint_name }} --deployment $PROD_DEPLOYMENT --deployment-file ${{ env.DEPLOYMENT_FILE }} --set deployments[$NUM_DEPLOYMENTS].model=${{ github.event.inputs.rc_model }} --traffic $PROD_DEPLOYMENT:100 --set tags.PROD_DEPLOYMENT=$PROD_DEPLOYMENT
-          exit 0 
+          # github action does not allow with exit 0
+          exit 1
         else # validate if PROD  has 100%.
           export PROD_TRAFFIC=$(az ml endpoint show -n ${{ github.event.inputs.endpoint_name }} -o tsv --query traffic.$PROD_DEPLOYMENT)
           if [[ $PROD_TRAFFIC -ne '100' ]]; then echo "Error: traffic to prod deployment needs to be 100%"; exit 1; fi   
