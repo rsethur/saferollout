@@ -92,7 +92,7 @@ jobs:
  
     - name: Step 3-Divert 10% traffic
       run: | 
-        az ml endpoint update -n ${{ github.event.inputs.endpoint_name }} --traffic {{ env.PROD_DEPLOYMENT}}:90,${{ github.event.inputs.RC_DEPLOYMENT_NAME }}:10
+        az ml endpoint update -n ${{ github.event.inputs.endpoint_name }} --traffic {{ env.PROD_DEPLOYMENT }}:90,${{ github.event.inputs.RC_DEPLOYMENT_NAME }}:10
         # run some tests
         # TODO - insert test script here
 
