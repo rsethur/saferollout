@@ -91,7 +91,7 @@ jobs:
       run: |          
         az ml endpoint update -n ${{ github.event.inputs.endpoint_name }} --deployment ${{ github.event.inputs.RC_DEPLOYMENT_NAME }} --deployment-file ${{ env.DEPLOYMENT_FILE }} --set deployments[${{ env.NUM_DEPLOYMENTS }}].model=${{ github.event.inputs.rc_model }} --traffic "${{ env.PROD_DEPLOYMENT }}:100,${{ github.event.inputs.RC_DEPLOYMENT_NAME }}:0"
  
-    - name: Step 3-Divert 10% traffic
+    - name: Step 3-Divert 10% traffic to RC
       run: | 
         az ml endpoint update -n ${{ github.event.inputs.endpoint_name }} --traffic ${{ env.PROD_DEPLOYMENT }}:90,${{ github.event.inputs.RC_DEPLOYMENT_NAME }}:10
         # run some tests
@@ -103,7 +103,8 @@ jobs:
         az ml endpoint update -n ${{ github.event.inputs.endpoint_name }}  --traffic ${{ env.PROD_DEPLOYMENT }}:0,${{ github.event.inputs.RC_DEPLOYMENT_NAME }}:100 --set tags.PROD_DEPLOYMENT=${{ github.event.inputs.RC_DEPLOYMENT_NAME }}
         export OLD_PROD_DEPLOYMENT=${{ env.PROD_DEPLOYMENT }}
         export PROD_DEPLOYMENT=${{ github.event.inputs.RC_DEPLOYMENT_NAME }}
+        echo "OLD_PROD_DEPLOYMENT=$OLD_PROD_DEPLOYMENT" >> $GITHUB_ENV
 
-    - name: Step 5-Delete OLD_PROD_DEPLOYMENT deployment
+    - name: Step 5-Delete old prod deployment
       run: | 
         az ml endpoint delete -n ${{ github.event.inputs.endpoint_name }} --deployment $OLD_PROD_DEPLOYMENT --yes
