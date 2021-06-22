@@ -88,7 +88,7 @@ jobs:
         fi
     - name: Step 2-Create RC deployment
       run: |          
-        az ml endpoint update -n ${{ github.event.inputs.endpoint_name }} --deployment ${{ github.event.inputs.RC_DEPLOYMENT_NAME }} --deployment-file ${{ env.DEPLOYMENT_FILE }} --set deployments[${{ env.NUM_DEPLOYMENTS }}].model=${{ github.event.inputs.rc_model }} --traffic "{{ env.PROD_DEPLOYMENT }}:100,${{ github.event.inputs.RC_DEPLOYMENT_NAME }}:0"
+        az ml endpoint update -n ${{ github.event.inputs.endpoint_name }} --deployment ${{ github.event.inputs.RC_DEPLOYMENT_NAME }} --deployment-file ${{ env.DEPLOYMENT_FILE }} --set deployments[${{ env.NUM_DEPLOYMENTS }}].model=${{ github.event.inputs.rc_model }} --traffic "$PROD_DEPLOYMENT:100,${{ github.event.inputs.RC_DEPLOYMENT_NAME }}:0"
  
     - name: Step 3-Divert 10% traffic
       run: | 
