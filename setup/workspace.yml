@@ -1,0 +1,7 @@
+$schema: https://azuremlschemas.azureedge.net/latest/workspace.schema.json
+name: saferollout
+location: eastus
+#storage_account: saferollout
+#container_registry: saferollout
+#key_vault: saferollout
+#application_insights: saferollout

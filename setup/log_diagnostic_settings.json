@@ -1,0 +1,10 @@
+[
+    {
+      "category": "AmlOnlineEndpointConsoleLog",
+      "enabled": true,
+      "retentionPolicy": {
+        "enabled": true,
+        "days": 730
+      }
+    }
+  ]

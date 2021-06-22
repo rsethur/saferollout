@@ -1,0 +1,27 @@
+{
+   "data":
+      [
+         {
+            "Age": 20,
+            "Sex": "male",
+            "Job": 0,
+            "Housing": "rent",
+            "Saving accounts": "little",
+            "Checking account": "little",
+            "Credit amount": 1000,
+            "Duration": 48,
+            "Purpose": "radio/TV"
+         },
+         {
+            "Age": 50,
+            "Sex": "male",
+            "Job": 2,
+            "Housing": "own",
+            "Saving accounts": "moderate",
+            "Checking account": "rich",
+            "Credit amount": 5000,
+            "Duration": 12,
+            "Purpose": "car"
+         }
+      ]
+ }

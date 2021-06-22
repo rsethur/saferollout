@@ -1,0 +1,19 @@
+$schema: https://azuremlschemas.azureedge.net/latest/managedOnlineDeployment.schema.json
+name: blue
+model: azureml:PLACEHOLDER:1 #azureml:initial-model:1
+code_configuration:      
+  code: 
+    local_path: ../risk_model/scoring/
+  scoring_script: score.py    
+environment: 
+  name: env-risk-model
+  version: 1
+  conda_file: file:../risk_model/environment/environment.yml
+  docker:
+    image: mcr.microsoft.com/azureml/openmpi3.1.2-ubuntu18.04:20210301.v1
+instance_type: Standard_F2s_v2
+scale_settings:
+  scale_type: Manual
+  instance_count: 2
+  min_instances: 1
+  max_instances: 2

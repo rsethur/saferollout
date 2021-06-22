@@ -1,0 +1,63 @@
+name: setup
+on: 
+  workflow_dispatch:
+    inputs:
+      rg:
+        description: 'resource group'     
+        required: true
+        default: 'saferollout'
+      rg-location:
+        description: "location of resource group and workspace"
+        required: true
+        default: 'eastus'
+      ws:
+        description: 'azureml workspace name'     
+        required: true
+        default: 'saferollout'
+      log-analytics-ws:
+        description: 'log analytics workspace name'     
+        required: true
+        default: 'saferollout-la'
+      log-analytics-locn:
+        description: 'location of log analytics workspace'     
+        required: true
+        default: 'eastus'      
+      subs:
+        description: 'subscription id'     
+        required: true
+        default: '6560575d-fa06-4e7d-95fb-f962e74efd7a'      
+      #cli-version:
+      #  description: 'azureml v2 cli version'     
+      #  required: true
+      #  default: '0.0.41'
+jobs:
+  
+  setup:
+    name: setup
+    runs-on: ubuntu-latest
+    steps:
+    - name: azure login
+      uses: azure/login@v1
+      with:
+        creds: ${{secrets.AZURE_TOKEN}}
+    - run: |
+          az config set defaults.workspace=${{ github.event.inputs.ws }}
+          az config set defaults.group=${{ github.event.inputs.rg }}
+          az account set -s ${{ github.event.inputs.subs }}    
+    - name: Install azureml cli extension
+      run: az extension add -n ml -y
+    - name: Create RG
+    - run: az group create --name ${{ github.event.inputs.rg }} --location ${{ github.event.inputs.rg_location } --subscription ${{ github.event.inputs.subs }}    
+    - name: create azureml workspace
+    - run: az ml workspace create -n ${{ github.event.inputs.ws }} --file setup/workspace.yml --location ${{ github.event.inputs.rg-location }}
+    - name: Checkout
+      uses: actions/checkout@v2.3.3
+    - name: Setup Python
+      uses: actions/setup-python@v2.1.4
+      with:
+        python-version: 3.7    
+    - name: "Create Log Analytics workspace (if it does not exist)"
+      run: |
+        az deployment group create --resource-group ${{ github.event.inputs.rg }} --template-file setup/loganalytics_arm.json \
+        --parameters workspaceName=${{ github.event.inputs.log-analytics-ws }} location=${{ github.event.inputs.log-analytics-locn }}
+    #az ml model create -f endpoint/model.yml -n risk-model -v 1
