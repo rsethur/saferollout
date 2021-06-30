@@ -1,6 +1,6 @@
 $schema: https://azuremlschemas.azureedge.net/latest/managedOnlineDeployment.schema.json
 name: blue
-model: azureml:PLACEHOLDER:1 #azureml:initial-model:1
+model: azureml:risk-model:1
 code_configuration:      
   code: 
     local_path: ../risk_model/scoring/
