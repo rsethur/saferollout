@@ -12,7 +12,7 @@ jobs:
       with:
         name: latest-model
         workflow: register_model.yml
-        #workflow_conclusion: success        
+        #workflow_conclusion: success
     - run: |
         ls
         cat latest-model.txt
