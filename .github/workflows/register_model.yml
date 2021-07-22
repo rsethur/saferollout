@@ -40,7 +40,9 @@ jobs:
         LATEST_MODEL_VERSION=$(($LATEST_MODEL_VERSION + 1))
         echo bb $LATEST_MODEL_VERSION
         az ml model create -n ${{ env.MODEL_NAME }} -v $LATEST_MODEL_VERSION -l ${{ env.MODEL_PATH }}
-        echo 'azureml:${{ env.MODEL_NAME }}:$LATEST_MODEL_VERSION' > latest-model.txt
+        export MODEL_NAME_WITH_VERSION=azureml:${{ env.MODEL_NAME }}:$LATEST_MODEL_VERSION
+        echo cc $MODEL_NAME_WITH_VERSION
+        echo $MODEL_NAME_WITH_VERSION > latest-model.txt
     - name: update model verion in artifact
       uses: actions/upload-artifact@v2
       with:
