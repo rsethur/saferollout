@@ -140,7 +140,7 @@ jobs:
       - name: Divert 100% traffic to RC and mark RC as PROD, PROD as OLD_PROD
         run: | 
           export PROD_DEPLOYMENT=$(az ml endpoint show -n ${{secrets.ENDPOINT_NAME }} -o tsv --query "tags.PROD_DEPLOYMENT")          
-          az ml endpoint update -n ${{secrets.ENDPOINT_NAME }} --traffic $PROD_DEPLOYMENT:100,${{ env.RC_DEPLOYMENT_NAME }}:0 --set tags.PROD_DEPLOYMENT=${{ env.RC_DEPLOYMENT_NAME }} tags.OLD_PROD_DEPLOYMENT=$PROD_DEPLOYMENT
+          az ml endpoint update -n ${{secrets.ENDPOINT_NAME }} --traffic $PROD_DEPLOYMENT:0,${{ env.RC_DEPLOYMENT_NAME }}:100 --set tags.PROD_DEPLOYMENT=${{ env.RC_DEPLOYMENT_NAME }} tags.OLD_PROD_DEPLOYMENT=$PROD_DEPLOYMENT
 
   delete_old_prod:
     needs: rollout_100pct_traffic
