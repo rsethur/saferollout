@@ -7,10 +7,12 @@ jobs:
     name: test
     runs-on: ubuntu-latest
     steps:    
-    - uses: dawidd6/action-download-artifact@v2      
+    - name: Download artifact
+      uses: dawidd6/action-download-artifact@v2      
       with:
         name: latest-model
         workflow: register_model
-        path: latest-model.txt
+        workflow_conclusion: success        
     - run: |
-      cat latest-model.txt
+        ls
+        cat latest-model.txt
