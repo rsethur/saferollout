@@ -170,4 +170,5 @@ jobs:
       - name: Divert 100% traffic to RC and mark RC as PROD, PROD as OLD_PROD
         run: | 
           export OLD_PROD_DEPLOYMENT=$(az ml endpoint show -n ${{ github.event.inputs.endpoint_name }} -o tsv --query "tags.OLD_PROD_DEPLOYMENT")          
-          az ml endpoint delete -n $ENDPOINT_NAME --deployment $OLD_PROD_DEPLOYMENT --yes #--no-wait
+          az ml endpoint delete -n ${{ github.event.inputs.endpoint_name }} --deployment $OLD_PROD_DEPLOYMENT --yes #--no-wait
+          az ml endpoint update -n ${{ github.event.inputs.endpoint_name }} --remove tags.OLD_PROD_DEPLOYMENT

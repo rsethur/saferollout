@@ -1,0 +1,48 @@
+name: register_model
+on: [workflow_dispatch]
+
+env:
+  MODEL_PATH: risk-model/model
+  MODEL_NAME: risk-model
+jobs:
+  
+  register_model:
+    name: register_model
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v2.3.3
+    - name: azure login
+      uses: azure/login@v1
+      with:
+        creds: ${{secrets.AZURE_TOKEN}}
+    - name: Set defaults
+      run: |
+        az config set defaults.workspace=${{ github.event.inputs.ws }}
+        az config set defaults.group=${{ github.event.inputs.rg }}
+        az account set -s ${{ github.event.inputs.subs }}    
+    - name: Install azureml cli extension
+      run: az extension add -n ml -y
+    
+    # step 1: validation and day1 scenarios
+    - name: register model
+      run: |
+        export MODEL_EXISTS=$(az ml model list -o tsv --query "[?name=='${{ env.MODEL_NAME }}'][name]" |  wc -l)
+        # currently "az ml model list" displays an extra line that cannot be counted: "Displaying top 100 results from the list command."
+        if [[ MODEL_EXISTS -eq 1 ]]; then
+          export  LATEST_MODEL_VERSION=0
+        echo "model does not exists - will be created"
+        else          
+          export LATEST_MODEL_VERSION=$(az ml model show -n ${{ env.MODEL_NAME }} --query "version" -o tsv)          
+        fi
+
+        LATEST_MODEL_VERSION=$(($LATEST_MODEL_VERSION + 1))
+        az ml model create -n ${{ env.MODEL_NAME }} -v $LATEST_MODEL_VERSION -l ${{ env.MODEL_PATH }}
+        echo 'azureml:${{ env.MODEL_NAME }}:$LATEST_MODEL_VERSION' > latest-model.txt
+    - name: update model verion in artifact
+      uses: actions/upload-artifact@v2
+      with:
+        name: latest-model
+        path: latest-model.txt
+        
+    
