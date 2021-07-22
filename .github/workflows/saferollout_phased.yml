@@ -1,0 +1,121 @@
+name: saferollout
+on: 
+  workflow_dispatch:
+    inputs:
+      endpoint_name:
+        description: 'endpoint name'     
+        required: true
+        default: 'sr-endpt'
+      rc_deployment_name:
+        description: 'name of the new deployment (release candidate)'     
+        required: true
+        default: 'dv1'
+      rc_model:
+        description: 'registered model name and version of the release candidate model'     
+        required: true
+        default: 'azureml:risk-model:1'
+      subs:
+        description: 'subscription id'     
+        required: true
+        default: '6560575d-fa06-4e7d-95fb-f962e74efd7a'  
+      ws:
+        description: 'azureml workspace name'     
+        required: true
+        default: 'saferollout'
+      rg:
+        description: 'resource group'     
+        required: true
+        default: 'saferollout'
+jobs:
+  
+  rollout_10pct_traffic:
+    name: rollout_10pct_traffic
+    runs-on: ubuntu-latest
+    steps:
+    - name: Configure endpoint files
+      run: |
+        echo "ENDPOINT_FILE=endpoint/endpoint.yml" >> $GITHUB_ENV
+        echo "DEPLOYMENT_FILE=endpoint/deployment.yml" >> $GITHUB_ENV
+    - name: Checkout
+      uses: actions/checkout@v2.3.3
+    - name: azure login
+      uses: azure/login@v1
+      with:
+        creds: ${{secrets.AZURE_TOKEN}}
+    - name: Set defaults
+      run: |
+        az config set defaults.workspace=${{ github.event.inputs.ws }}
+        az config set defaults.group=${{ github.event.inputs.rg }}
+        az account set -s ${{ github.event.inputs.subs }}    
+    - name: Install azureml cli extension
+      run: az extension add -n ml -y
+    
+    # step 1: validation and day1 scenarios
+    - name: Step 1a-If endpoint does not exist, create
+      run: |
+        export ENDPOINT_EXISTS=$(az ml endpoint list -o tsv --query "[?name=='${{ github.event.inputs.endpoint_name }}'][name]" |  wc -l)
+        if [[ ENDPOINT_EXISTS -ne 1 ]]; then
+          az ml endpoint create -n ${{ github.event.inputs.endpoint_name }} -f ${{ env.ENDPOINT_FILE }}
+        else
+          echo "endpoint ${{ github.event.inputs.endpoint_name }} exists"
+        fi
+
+    - name: Step 1b-validate new deployment name does not exiat
+      run: |
+        export RC_DEPLOYMENT_EXISTS=$(az ml endpoint show -n ${{ github.event.inputs.endpoint_name }} -o tsv --query "deployments[?name == '${{ github.event.inputs.RC_DEPLOYMENT_NAME }}'].name" |  wc -l)
+        if [[ RC_DEPLOYMENT_EXISTS -eq 1 ]]; then
+        echo "deployment with name ${{ github.event.inputs.RC_DEPLOYMENT_NAME }} already exists. Exiting."
+        exit 1
+        fi
+    
+      # Step 1c - If prod does not exist, create the RC as prod. Else If PROD exists validate if it has 100%.
+    - name: Step 1c-if PROD does not exist, create RC as PROD
+      run: |
+        # get number of deployments
+        export NUM_DEPLOYMENTS=$(az ml endpoint show -n ${{ github.event.inputs.endpoint_name }} -o tsv --query 'deployments | length(@)' | tr -d "\r")
+        echo "NUM_DEPLOYMENTS=$NUM_DEPLOYMENTS" >> $GITHUB_ENV
+        if [[ $NUM_DEPLOYMENTS -gt '1' ]]; then echo "Error: one deployment (PROD) can exist"; exit 1; fi
+        # Get the name of prod deployment
+        export PROD_DEPLOYMENT=$(az ml endpoint show -n ${{ github.event.inputs.endpoint_name }} -o tsv --query "tags.PROD_DEPLOYMENT")
+        echo "PROD_DEPLOYMENT=$PROD_DEPLOYMENT" >> $GITHUB_ENV
+        if [[ -z "$PROD_DEPLOYMENT" ]]; then
+          export PROD_DEPLOYMENT=${{ github.event.inputs.RC_DEPLOYMENT_NAME }}  
+          az ml endpoint update -n ${{ github.event.inputs.endpoint_name }} --deployment $PROD_DEPLOYMENT --deployment-file ${{ env.DEPLOYMENT_FILE }} --set deployments[$NUM_DEPLOYMENTS].model=${{ github.event.inputs.rc_model }} --traffic $PROD_DEPLOYMENT:100 --set tags.PROD_DEPLOYMENT=$PROD_DEPLOYMENT
+          # github action does not allow with exit 0
+          exit 1
+        else # validate if PROD  has 100%.
+          export PROD_TRAFFIC=$(az ml endpoint show -n ${{ github.event.inputs.endpoint_name }} -o tsv --query traffic.$PROD_DEPLOYMENT)
+          if [[ $PROD_TRAFFIC -ne '100' ]]; then echo "Error: traffic to prod deployment needs to be 100%"; exit 1; fi   
+        fi
+    - name: Step 2-Create RC deployment
+      run: |          
+        az ml endpoint update -n ${{ github.event.inputs.endpoint_name }} --deployment ${{ github.event.inputs.RC_DEPLOYMENT_NAME }} --deployment-file ${{ env.DEPLOYMENT_FILE }} --set deployments[${{ env.NUM_DEPLOYMENTS }}].model=${{ github.event.inputs.rc_model }} --traffic "${{ env.PROD_DEPLOYMENT }}:100,${{ github.event.inputs.RC_DEPLOYMENT_NAME }}:0"
+ 
+    - name: Step 3-Divert 10% traffic to RC
+      run: | 
+        az ml endpoint update -n ${{ github.event.inputs.endpoint_name }} --traffic ${{ env.PROD_DEPLOYMENT }}:90,${{ github.event.inputs.RC_DEPLOYMENT_NAME }}:10
+        # run some tests
+        # TODO - insert test script here
+
+  rollout_50pct_traffic:
+    needs: rollout_10pct_traffic
+    name: rollout_50pct_traffic
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2.3.3
+      - name: azure login
+        uses: azure/login@v1
+        with:
+          creds: ${{secrets.AZURE_TOKEN}}
+      - name: Set defaults
+        run: |
+          az config set defaults.workspace=${{ github.event.inputs.ws }}
+          az config set defaults.group=${{ github.event.inputs.rg }}
+          az account set -s ${{ github.event.inputs.subs }}    
+      - name: Install azureml cli extension
+        run: az extension add -n ml -y
+      - name: Divert 50% traffic to RC
+        run: | 
+          export PROD_DEPLOYMENT=$(az ml endpoint show -n ${{ github.event.inputs.endpoint_name }} -o tsv --query "tags.PROD_DEPLOYMENT")          
+          az ml endpoint update -n ${{ github.event.inputs.endpoint_name }} --traffic $PROD_DEPLOYMENT:100,${{ github.event.inputs.RC_DEPLOYMENT_NAME }}:0
