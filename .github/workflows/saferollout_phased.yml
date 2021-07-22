@@ -15,7 +15,7 @@ jobs:
     #if: ${{ github.event.workflow_run.conclusion == 'success' }}
     steps:
     - run: |
-        echo AAA $GITHUB_EVENT_NAME
+        echo AAA ${{ github.event_name }}
     - name: Configure endpoint files
       run: |
         echo "ENDPOINT_FILE=endpoint/endpoint.yml" >> $GITHUB_ENV
