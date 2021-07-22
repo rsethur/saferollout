@@ -62,7 +62,8 @@ jobs:
         # get number of deployments
         export NUM_DEPLOYMENTS=$(az ml endpoint show -n ${{ env.ENDPOINT_NAME }} -o tsv --query 'deployments | length(@)' | tr -d "\r")
         echo "NUM_DEPLOYMENTS=$NUM_DEPLOYMENTS" >> $GITHUB_ENV
-        # if [[ $NUM_DEPLOYMENTS -gt '1' ]]; then echo "Error: Only one deployment (PROD) can exist"; exit 1; fi
+        # This below limitation will go with GA release
+        if [[ $NUM_DEPLOYMENTS -gt '1' ]]; then echo "Error: Only one deployment (PROD) can exist"; exit 1; fi
         # Get the name of prod deployment
         export PROD_DEPLOYMENT=$(az ml endpoint show -n ${{ env.ENDPOINT_NAME }} -o tsv --query "tags.PROD_DEPLOYMENT")
         echo "PROD_DEPLOYMENT=$PROD_DEPLOYMENT" >> $GITHUB_ENV
