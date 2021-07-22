@@ -6,10 +6,6 @@ on:
         description: 'endpoint name'     
         required: true
         default: 'sr-endpt'
-      rc_deployment_name:
-        description: 'name of the new deployment (release candidate)'     
-        required: true
-        default: 'dv1'
       rc_model:
         description: 'registered model name and version of the release candidate model'     
         required: true
@@ -23,9 +19,11 @@ on:
         required: true
         default: 'saferollout'
       rg:
-        description: 'resource group'     
+        description: 'resource group'
         required: true
         default: 'saferollout'
+env:
+  RC_DEPLOYMENT_NAME: ${{ github.run_number }}
 jobs:
   
   rollout_10pct_traffic:
@@ -62,9 +60,9 @@ jobs:
 
     - name: Step 1b-validate new deployment name does not exiat
       run: |
-        export RC_DEPLOYMENT_EXISTS=$(az ml endpoint show -n ${{ github.event.inputs.endpoint_name }} -o tsv --query "deployments[?name == '${{ github.event.inputs.RC_DEPLOYMENT_NAME }}'].name" |  wc -l)
+        export RC_DEPLOYMENT_EXISTS=$(az ml endpoint show -n ${{ github.event.inputs.endpoint_name }} -o tsv --query "deployments[?name == '${{ env.RC_DEPLOYMENT_NAME }}'].name" |  wc -l)
         if [[ RC_DEPLOYMENT_EXISTS -eq 1 ]]; then
-        echo "deployment with name ${{ github.event.inputs.RC_DEPLOYMENT_NAME }} already exists. Exiting."
+        echo "deployment with name ${{ env.RC_DEPLOYMENT_NAME }} already exists. Exiting."
         exit 1
         fi
     
@@ -79,7 +77,7 @@ jobs:
         export PROD_DEPLOYMENT=$(az ml endpoint show -n ${{ github.event.inputs.endpoint_name }} -o tsv --query "tags.PROD_DEPLOYMENT")
         echo "PROD_DEPLOYMENT=$PROD_DEPLOYMENT" >> $GITHUB_ENV
         if [[ -z "$PROD_DEPLOYMENT" ]]; then
-          export PROD_DEPLOYMENT=${{ github.event.inputs.RC_DEPLOYMENT_NAME }}  
+          export PROD_DEPLOYMENT=${{ env.RC_DEPLOYMENT_NAME }}  
           az ml endpoint update -n ${{ github.event.inputs.endpoint_name }} --deployment $PROD_DEPLOYMENT --deployment-file ${{ env.DEPLOYMENT_FILE }} --set deployments[$NUM_DEPLOYMENTS].model=${{ github.event.inputs.rc_model }} --traffic $PROD_DEPLOYMENT:100 --set tags.PROD_DEPLOYMENT=$PROD_DEPLOYMENT
           # github action does not allow with exit 0
           exit 1
@@ -89,17 +87,20 @@ jobs:
         fi
     - name: Step 2-Create RC deployment
       run: |          
-        az ml endpoint update -n ${{ github.event.inputs.endpoint_name }} --deployment ${{ github.event.inputs.RC_DEPLOYMENT_NAME }} --deployment-file ${{ env.DEPLOYMENT_FILE }} --set deployments[${{ env.NUM_DEPLOYMENTS }}].model=${{ github.event.inputs.rc_model }} --traffic "${{ env.PROD_DEPLOYMENT }}:100,${{ github.event.inputs.RC_DEPLOYMENT_NAME }}:0"
+        az ml endpoint update -n ${{ github.event.inputs.endpoint_name }} --deployment ${{ env.RC_DEPLOYMENT_NAME }} --deployment-file ${{ env.DEPLOYMENT_FILE }} --set deployments[${{ env.NUM_DEPLOYMENTS }}].model=${{ github.event.inputs.rc_model }} --traffic "${{ env.PROD_DEPLOYMENT }}:100,${{ env.RC_DEPLOYMENT_NAME }}:0"
  
     - name: Step 3-Divert 10% traffic to RC
       run: | 
-        az ml endpoint update -n ${{ github.event.inputs.endpoint_name }} --traffic ${{ env.PROD_DEPLOYMENT }}:90,${{ github.event.inputs.RC_DEPLOYMENT_NAME }}:10
+        az ml endpoint update -n ${{ github.event.inputs.endpoint_name }} --traffic ${{ env.PROD_DEPLOYMENT }}:90,${{ env.RC_DEPLOYMENT_NAME }}:10
         # run some tests
         # TODO - insert test script here
 
   rollout_50pct_traffic:
     needs: rollout_10pct_traffic
     name: rollout_50pct_traffic
+    environment:
+      name: rollout_50pct_traffic
+      url: http://ml.azure.com
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -118,4 +119,55 @@ jobs:
       - name: Divert 50% traffic to RC
         run: | 
           export PROD_DEPLOYMENT=$(az ml endpoint show -n ${{ github.event.inputs.endpoint_name }} -o tsv --query "tags.PROD_DEPLOYMENT")          
-          az ml endpoint update -n ${{ github.event.inputs.endpoint_name }} --traffic $PROD_DEPLOYMENT:100,${{ github.event.inputs.RC_DEPLOYMENT_NAME }}:0
+          az ml endpoint update -n ${{ github.event.inputs.endpoint_name }} --traffic $PROD_DEPLOYMENT:50,${{ env.RC_DEPLOYMENT_NAME }}:50
+
+  rollout_100pct_traffic:
+    needs: rollout_50pct_traffic
+    name: rollout_100pct_traffic
+    environment:
+      name: rollout_100pct_traffic
+      url: http://ml.azure.com
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2.3.3
+      - name: azure login
+        uses: azure/login@v1
+        with:
+          creds: ${{secrets.AZURE_TOKEN}}
+      - name: Set defaults
+        run: |
+          az config set defaults.workspace=${{ github.event.inputs.ws }}
+          az config set defaults.group=${{ github.event.inputs.rg }}
+          az account set -s ${{ github.event.inputs.subs }}    
+      - name: Install azureml cli extension
+        run: az extension add -n ml -y
+      - name: Divert 100% traffic to RC and mark RC as PROD, PROD as OLD_PROD
+        run: | 
+          export PROD_DEPLOYMENT=$(az ml endpoint show -n ${{ github.event.inputs.endpoint_name }} -o tsv --query "tags.PROD_DEPLOYMENT")          
+          az ml endpoint update -n ${{ github.event.inputs.endpoint_name }} --traffic $PROD_DEPLOYMENT:100,${{ env.RC_DEPLOYMENT_NAME }}:0 --set tags.PROD_DEPLOYMENT=${{ env.RC_DEPLOYMENT_NAME }} tags.OLD_PROD_DEPLOYMENT=$PROD_DEPLOYMENT
+
+  delete_old_prod:
+    needs: rollout_100pct_traffic
+    name: delete_old_prod
+    environment:
+      name: delete_old_prod
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2.3.3
+      - name: azure login
+        uses: azure/login@v1
+        with:
+          creds: ${{secrets.AZURE_TOKEN}}
+      - name: Set defaults
+        run: |
+          az config set defaults.workspace=${{ github.event.inputs.ws }}
+          az config set defaults.group=${{ github.event.inputs.rg }}
+          az account set -s ${{ github.event.inputs.subs }}    
+      - name: Install azureml cli extension
+        run: az extension add -n ml -y
+      - name: Divert 100% traffic to RC and mark RC as PROD, PROD as OLD_PROD
+        run: | 
+          export OLD_PROD_DEPLOYMENT=$(az ml endpoint show -n ${{ github.event.inputs.endpoint_name }} -o tsv --query "tags.OLD_PROD_DEPLOYMENT")          
+          az ml endpoint delete -n $ENDPOINT_NAME --deployment $OLD_PROD_DEPLOYMENT --yes #--no-wait
