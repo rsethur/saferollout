@@ -23,7 +23,7 @@ on:
         required: true
         default: 'saferollout'
 env:
-  RC_DEPLOYMENT_NAME: ${{ github.run_number }}
+  RC_DEPLOYMENT_NAME: run${{ github.run_number }}
 jobs:
   
   rollout_10pct_traffic:
