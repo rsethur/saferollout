@@ -10,9 +10,9 @@ jobs:
     - name: Download artifact
       uses: dawidd6/action-download-artifact@v2      
       with:
-        name: latest-model
-        workflow: register_model
-        workflow_conclusion: success        
+        #name: latest-model
+        workflow: register_model.yml
+        #workflow_conclusion: success        
     - run: |
         ls
         cat latest-model.txt
