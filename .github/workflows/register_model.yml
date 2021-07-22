@@ -1,4 +1,4 @@
-name: Register model
+name: register-model
 on: [workflow_dispatch]
 
 env:
