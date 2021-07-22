@@ -1,0 +1,18 @@
+name: test
+on: [workflow_dispatch]
+
+jobs:
+  
+  test:
+    name: test
+    runs-on: ubuntu-latest
+    steps:    
+    - uses: dawidd6/action-download-artifact@v2
+      workflow: register_model.yml
+      with:
+        name: latest-model
+        path: latest-model.txt
+    - run: |
+      cat latest-model.txt
+        
+    
