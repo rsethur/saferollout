@@ -2,7 +2,7 @@ name: register_model
 on: [workflow_dispatch]
 
 env:
-  MODEL_PATH: risk-model/model
+  MODEL_PATH: risk_model/model
   MODEL_NAME: risk-model
 jobs:
   
