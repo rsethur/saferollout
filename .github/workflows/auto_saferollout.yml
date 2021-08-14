@@ -98,8 +98,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - run: |
-          export RESOURCE_ID=$(az ml endpoint show -n ${{secrets.ENDPOINT_NAME }} -o tsv --query "id")
-          echo rrr $RESOURCE_ID
+          export RESOURCE_ID=/subscriptions/${{secrets.SUBSCRIPTION_ID}}/resourceGroups/${{secrets.RESOURCE_GROUP}}/providers/Microsoft.MachineLearningServices/workspaces/${{secrets.AML_WORKSPACE}}/onlineEndpoints/${{secrets.ENDPOINT_NAME}}          
     # Validate there are no errors(10% traffic)
       - name: Validate there are no errors(10% traffic)
         uses: rsethur/validate-metrics@v1.0.44
@@ -112,7 +111,7 @@ jobs:
           metrics_condition: lte
           interval: PT1M
           num_intervals: 2 # The environment auto_rollout_50pct_traffic has wait time of 5 mins
-          filter: "deployment eq 'green' and statusCodeClass ne '2xx'"
+          filter: "deployment eq '${{ env.RC_DEPLOYMENT_NAME }}' and statusCodeClass ne '2xx'"
           threshold: 0
           resource_id: ${{ env.RESOURCE_ID }}
         env:
@@ -131,7 +130,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - run: |
-          export RESOURCE_ID=$(az ml endpoint show -n ${{secrets.ENDPOINT_NAME }} -o tsv --query "id")
+          export RESOURCE_ID=/subscriptions/${{secrets.SUBSCRIPTION_ID}}/resourceGroups/${{secrets.RESOURCE_GROUP}}/providers/Microsoft.MachineLearningServices/workspaces/${{secrets.AML_WORKSPACE}}/onlineEndpoints/${{secrets.ENDPOINT_NAME}}
+          echo resid $RESOURCE_ID
       - run: |
           echo resource_id: ${{ env.RESOURCE_ID }}
       # Validate latency within threshold 
@@ -146,7 +146,7 @@ jobs:
           metrics_condition: lte
           interval: PT1M
           num_intervals: 2 # The environment auto_rollout_50pct_traffic has wait time of 5 mins
-          filter: "deployment eq 'green' and statusCodeClass ne '2xx'"
+          filter: "deployment eq '${{ env.RC_DEPLOYMENT_NAME }}' and statusCodeClass ne '2xx'"
           threshold: 30
           resource_id: ${{ env.RESOURCE_ID }}
         env:
