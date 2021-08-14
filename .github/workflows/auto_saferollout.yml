@@ -202,7 +202,7 @@ jobs:
     needs: rollout_50pct_traffic
     name: Validate errors within threshold @ 50% traffic
     environment:
-      name: auto_rollout_50pct_traffic
+      name: auto_rollout_100pct_traffic
     runs-on: ubuntu-latest
     steps:
       - run: |
@@ -235,7 +235,7 @@ jobs:
     needs: rollout_100pct_traffic
     name: Validate errors within threshold @ 100% traffic
     environment:
-      name: auto_rollout_100pct_traffic
+      name: auto_delete_old_prod
     runs-on: ubuntu-latest
     steps:
       - run: |
@@ -332,9 +332,9 @@ jobs:
           path: "/home/runner/chart-output/latency"
 
   validate_latency_within_threshold_100pct_traffic:
-    needs: rollout_10pct_traffic
+    needs: rollout_100pct_traffic
     environment:
-      name: auto_rollout_50pct_traffic
+      name: auto_delete_old_prod
     name: Validate latency within threshold @ 100% traffic
     runs-on: ubuntu-latest
     steps:
