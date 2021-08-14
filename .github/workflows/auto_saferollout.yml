@@ -363,3 +363,32 @@ jobs:
         with:
           name: validate-latency-at-100pct_traffic
           path: "/home/runner/chart-output/latency"
+  
+  generate_live_traffic:
+    name: Generate live endpoint traffic
+    runs-on: ubuntu-latest
+    steps:
+      - run: |
+          az extension add --source https://azuremlsdktestpypi.blob.core.windows.net/wheels/sdk-cli-v2-public/ml-${{ github.event.inputs.cli-version }}-py3-none-any.whl --pip-extra-index-urls https://azuremlsdktestpypi.azureedge.net/sdk-cli-v2-public -y
+          az extension add --n log-analytics --yes
+
+      - name: azure login
+        uses: azure/login@v1
+        with:
+          creds: ${{secrets.AZURE_TOKEN}}
+      - name: Set defaults
+        run: |
+            az config set defaults.workspace=${{ github.event.inputs.ws }}
+            az config set defaults.group=${{ github.event.inputs.rg }}
+            az account set -s ${{ github.event.inputs.subs }}    
+
+      - name: Install load generator
+        run: |
+          wget https://github.com/tsenart/vegeta/releases/download/v12.8.4/vegeta_12.8.4_linux_amd64.tar.gz
+          tar -xvf vegeta_12.8.4_linux_amd64.tar.gz
+      - name: "Open live traffic"
+        run: |
+          ENDPOINT_URI=$(az ml endpoint show -n ${{secrets.ENDPOINT_NAME}} -o tsv --query scoring_uri)        
+          echo $ENDPOINT_URI
+          ENDPOINT_TOKEN=$(az ml endpoint get-credentials -n ${{secrets.ENDPOINT_NAME}} -o tsv --query primaryKey)
+          echo "POST $ENDPOINT_URI" | ./vegeta attack -body test/sample-request.json -header "Content-Type: application/json" -header "authorization: Bearer $ENDPOINT_TOKEN" -rate=15 -duration 70m -output loadtest.out 
