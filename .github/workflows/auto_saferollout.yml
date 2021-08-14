@@ -99,7 +99,7 @@ jobs:
     steps:
     # Validate there are no errors(10% traffic)
       - name: Validate there are no errors(10% traffic)
-        uses: ./
+        uses: rsethur/validate-metrics@v1.0.44
         continue-on-error: false
         with:
           chart_name: "Validate errors (10% traffic)"
@@ -108,7 +108,7 @@ jobs:
           aggregation: Average
           metrics_condition: lte
           interval: PT1M
-          num_intervals: 5 # The environment auto_rollout_50pct_traffic has wait time of 5 mins
+          num_intervals: 2 # The environment auto_rollout_50pct_traffic has wait time of 5 mins
           filter: "deployment eq 'green' and statusCodeClass ne '2xx'"
           threshold: 0
           resource_id: ${{ env.resource_id }}
@@ -116,13 +116,15 @@ jobs:
           AZURE_CREDENTIALS: ${{secrets.AZURE_TOKEN}}
  
   validate_latency_within_threshold_10pct_traffic:
-    needs: [validate_errors_within_threshold_10pct_traffic, validate_latency_within_threshold_10pct_traffic]
+    needs: rollout_10pct_traffic
+    environment:
+      name: auto_rollout_50pct_traffic
     #name: validate_errors_within_threshold
     runs-on: ubuntu-latest
     steps:
       # Validate latency within threshold (10% traffic)
       - name: Validate there are no errors(10% traffic)
-        uses: ./
+        uses: rsethur/validate-metrics@v1.0.44
         continue-on-error: false
         with:
           chart_name: "Validate errors (10% traffic)"
@@ -131,7 +133,7 @@ jobs:
           aggregation: Average
           metrics_condition: lte
           interval: PT1M
-          num_intervals: 5 # The environment auto_rollout_50pct_traffic has wait time of 5 mins
+          num_intervals: 2 # The environment auto_rollout_50pct_traffic has wait time of 5 mins
           filter: "deployment eq 'green' and statusCodeClass ne '2xx'"
           threshold: 30
           resource_id: ${{ env.resource_id }}
@@ -139,10 +141,8 @@ jobs:
           AZURE_CREDENTIALS: ${{secrets.AZURE_TOKEN}}
 
   rollout_50pct_traffic:
-    needs: rollout_10pct_traffic
-    name: rollout_50pct_traffic
-    environment:
-      name: auto_rollout_50pct_traffic
+    needs: [validate_errors_within_threshold_10pct_traffic, validate_latency_within_threshold_10pct_traffic]
+    name: rollout_50pct_traffic    
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
