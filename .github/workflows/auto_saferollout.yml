@@ -105,8 +105,8 @@ jobs:
         uses: rsethur/validate-metrics@v1.0.44
         continue-on-error: false
         with:
-          chart_name: "Validate errors (10% traffic)"
-          chart_save_path: "/home/runner/chart-output/validate-errors-10pct_traffic"
+          chart_name: "Validate errors (10pct traffic)"
+          chart_save_path: "/home/runner/chart-output/"
           metric: RequestsPerMinute
           aggregation: Average
           metrics_condition: lte
@@ -117,6 +117,11 @@ jobs:
           resource_id: ${{ env.RESOURCE_ID }}
         env:
           AZURE_CREDENTIALS: ${{secrets.AZURE_TOKEN}}
+      # Upload the chart as an artifact to the workflow run
+      - uses: actions/upload-artifact@v2
+        with:
+          name: validate-errors-at-10pct_traffic
+          path: "/home/runner/chart-output/"      
  
   validate_latency_within_threshold_10pct_traffic:
     needs: rollout_10pct_traffic
@@ -134,8 +139,8 @@ jobs:
         uses: rsethur/validate-metrics@v1.0.44
         continue-on-error: false
         with:
-          chart_name: "Validate errors (10% traffic)"
-          chart_save_path: "/home/runner/chart-output/validate-latency-10pct_traffic"
+          chart_name: "Validate latency (10pct traffic)"
+          chart_save_path: "/home/runner/chart-output/"
           metric: RequestLatency_P90
           aggregation: Average
           metrics_condition: lte
@@ -146,6 +151,11 @@ jobs:
           resource_id: ${{ env.RESOURCE_ID }}
         env:
           AZURE_CREDENTIALS: ${{secrets.AZURE_TOKEN}}
+      # Upload the chart as an artifact to the workflow run
+      - uses: actions/upload-artifact@v2
+        with:
+          name: validate-latency-at-10pct_traffic
+          path: "/home/runner/chart-output/"      
 
   rollout_50pct_traffic:
     needs: [validate_errors_within_threshold_10pct_traffic, validate_latency_within_threshold_10pct_traffic]
