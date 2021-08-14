@@ -25,8 +25,8 @@ jobs:
           metrics_condition: lte
           interval: PT1M
           num_intervals: 5
-          filter: "deployment eq '${{ env.RC_DEPLOYMENT_NAME }}' and statusCodeClass ne '2xx'"
-          threshold: 1
+          filter: deployment eq '${{ env.RC_DEPLOYMENT_NAME }}' and statusCodeClass ne '2xx'
+          threshold: 10
           resource_id: ${{ env.RESOURCE_ID }}
         env:
           AZURE_CREDENTIALS: ${{secrets.AZURE_TOKEN}}
