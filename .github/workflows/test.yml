@@ -21,7 +21,7 @@ jobs:
         continue-on-error: false
         with:
           chart_name: "Validate latency at 10pct traffic"
-          chart_save_path: "/home/chart-output/latency_10pct"
+          chart_save_path: "/home/runner/chart-output/latency_10pct"
           metric: RequestLatency_P90
           aggregation: Average
           metrics_condition: lte
@@ -36,6 +36,6 @@ jobs:
       - uses: actions/upload-artifact@v2
         with:
           name: validate-latency-at-10pct_traffic
-          path: "/home/chart-output/latency_10pct"      
+          path: "/home/runner/chart-output/latency_10pct"      
 
   
