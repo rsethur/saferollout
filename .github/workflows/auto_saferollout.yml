@@ -1,4 +1,4 @@
-name: phased-saferollout
+name: auto-saferollout
 on:
   workflow_dispatch:
   workflow_run:
@@ -90,12 +90,59 @@ jobs:
         # run some tests
         # TODO - insert test script here
 
+  validate_errors_within_threshold_10pct_traffic:
+    needs: rollout_10pct_traffic
+    #name: validate_errors_within_threshold
+    environment:
+      name: auto_rollout_50pct_traffic
+    runs-on: ubuntu-latest
+    steps:
+    # Validate there are no errors(10% traffic)
+      - name: Validate there are no errors(10% traffic)
+        uses: ./
+        continue-on-error: false
+        with:
+          chart_name: "Validate errors (10% traffic)"
+          chart_save_path: "/home/runner/chart-output/validate-errors-10pct_traffic"
+          metric: RequestsPerMinute
+          aggregation: Average
+          metrics_condition: lte
+          interval: PT1M
+          num_intervals: 5 # The environment auto_rollout_50pct_traffic has wait time of 5 mins
+          filter: "deployment eq 'green' and statusCodeClass ne '2xx'"
+          threshold: 0
+          resource_id: ${{ env.resource_id }}
+        env:
+          AZURE_CREDENTIALS: ${{secrets.AZURE_TOKEN}}
+ 
+  validate_latency_within_threshold_10pct_traffic:
+    needs: [validate_errors_within_threshold_10pct_traffic, validate_latency_within_threshold_10pct_traffic]
+    #name: validate_errors_within_threshold
+    runs-on: ubuntu-latest
+    steps:
+      # Validate latency within threshold (10% traffic)
+      - name: Validate there are no errors(10% traffic)
+        uses: ./
+        continue-on-error: false
+        with:
+          chart_name: "Validate errors (10% traffic)"
+          chart_save_path: "/home/runner/chart-output/validate-latency-10pct_traffic"
+          metric: RequestLatency_P90
+          aggregation: Average
+          metrics_condition: lte
+          interval: PT1M
+          num_intervals: 5 # The environment auto_rollout_50pct_traffic has wait time of 5 mins
+          filter: "deployment eq 'green' and statusCodeClass ne '2xx'"
+          threshold: 30
+          resource_id: ${{ env.resource_id }}
+        env:
+          AZURE_CREDENTIALS: ${{secrets.AZURE_TOKEN}}
+
   rollout_50pct_traffic:
     needs: rollout_10pct_traffic
     name: rollout_50pct_traffic
     environment:
-      name: rollout_50pct_traffic
-      url: http://ml.azure.com
+      name: auto_rollout_50pct_traffic
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -109,6 +156,8 @@ jobs:
           az config set defaults.workspace=${{secrets.AML_WORKSPACE}}
           az config set defaults.group=${{secrets.RESOURCE_GROUP}}
           az account set -s ${{secrets.SUBSCRIPTION_ID}}
+      
+      
       - name: Install azureml cli extension
         run: az extension add -n ml -y
       - name: Divert 50% traffic to RC
