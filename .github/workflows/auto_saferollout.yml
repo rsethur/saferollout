@@ -368,19 +368,17 @@ jobs:
     name: Generate live endpoint traffic
     runs-on: ubuntu-latest
     steps:
-      - run: |
-          az extension add --source https://azuremlsdktestpypi.blob.core.windows.net/wheels/sdk-cli-v2-public/ml-${{ github.event.inputs.cli-version }}-py3-none-any.whl --pip-extra-index-urls https://azuremlsdktestpypi.azureedge.net/sdk-cli-v2-public -y
-          az extension add --n log-analytics --yes
-
+      - name: Install azureml cli extension
+        run: az extension add -n ml -y
       - name: azure login
         uses: azure/login@v1
         with:
           creds: ${{secrets.AZURE_TOKEN}}
       - name: Set defaults
         run: |
-            az config set defaults.workspace=${{ github.event.inputs.ws }}
-            az config set defaults.group=${{ github.event.inputs.rg }}
-            az account set -s ${{ github.event.inputs.subs }}    
+          az config set defaults.workspace=${{secrets.AML_WORKSPACE}}
+          az config set defaults.group=${{secrets.RESOURCE_GROUP}}
+          az account set -s ${{secrets.SUBSCRIPTION_ID}}   
 
       - name: Install load generator
         run: |
