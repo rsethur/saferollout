@@ -6,29 +6,27 @@ env:
   RC_DEPLOYMENT_NAME: run24
 jobs: 
   validate_latency_within_threshold_10pct_traffic:    
-    name: validate latency @ 10% traffic
-    runs-on: ubuntu-latest
-    environment:
-      name: auto_rollout_50pct_traffic
+    name: validate error
+    runs-on: ubuntu-latest    
     steps:
       - run: |
           export RESOURCE_ID=/subscriptions/${{secrets.SUBSCRIPTION_ID}}/resourceGroups/${{secrets.RESOURCE_GROUP}}/providers/Microsoft.MachineLearningServices/workspaces/${{secrets.AML_WORKSPACE}}/onlineEndpoints/${{secrets.ENDPOINT_NAME}}
           echo "RESOURCE_ID=$RESOURCE_ID" >> $GITHUB_ENV
           echo resid $RESOURCE_ID
       # Validate latency within threshold 
-      - name: Validate latency within threshold 
+      - name: Validate error within threshold 
         uses: rsethur/validate-metrics@v1.0.44
         continue-on-error: false
         with:
-          chart_name: "Validate latency at 10pct traffic"
-          chart_save_path: "/home/runner/chart-output/latency_10pct"
-          metric: RequestLatency_P90
+          chart_name: "Validate errors (10pct traffic)"
+          chart_save_path: "/home/runner/chart-output/error"
+          metric: RequestsPerMinute
           aggregation: Average
           metrics_condition: lte
           interval: PT1M
-          num_intervals: 5 # The environment auto_rollout_50pct_traffic has wait time of 5 mins
-          filter: "deployment eq '${{ env.RC_DEPLOYMENT_NAME }}'"
-          threshold: 30
+          num_intervals: 5
+          filter: "deployment eq '${{ env.RC_DEPLOYMENT_NAME }}' and statusCodeClass ne '2xx'"
+          threshold: 1
           resource_id: ${{ env.RESOURCE_ID }}
         env:
           AZURE_CREDENTIALS: ${{secrets.AZURE_TOKEN}}
@@ -36,6 +34,6 @@ jobs:
       - uses: actions/upload-artifact@v2
         with:
           name: validate-latency-at-10pct_traffic
-          path: "/home/runner/chart-output/latency_10pct"      
+          path: "/home/runner/chart-output/error"      
 
   

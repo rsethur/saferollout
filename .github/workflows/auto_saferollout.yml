@@ -188,7 +188,7 @@ jobs:
           interval: PT1M
           num_intervals: ${{env.METRICS_VALIDATION_INTERVAL_MINS}}
           filter: "deployment eq '${{ env.RC_DEPLOYMENT_NAME }}' and statusCodeClass ne '2xx'"
-          threshold: 0
+          threshold: 1
           resource_id: ${{ env.RESOURCE_ID }}
         env:
           AZURE_CREDENTIALS: ${{secrets.AZURE_TOKEN}}
