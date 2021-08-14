@@ -148,7 +148,7 @@ jobs:
           metrics_condition: lte
           interval: PT1M
           num_intervals: 2 # The environment auto_rollout_50pct_traffic has wait time of 5 mins
-          filter: "deployment eq '${{ env.RC_DEPLOYMENT_NAME }}' and statusCodeClass ne '2xx'"
+          filter: "deployment eq '${{ env.RC_DEPLOYMENT_NAME }}'"
           threshold: 30
           resource_id: ${{ env.RESOURCE_ID }}
         env:
