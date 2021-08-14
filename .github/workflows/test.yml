@@ -5,10 +5,7 @@ on:
 env:
   RC_DEPLOYMENT_NAME: run24
 jobs: 
-  validate_latency_within_threshold_10pct_traffic:
-    needs: rollout_10pct_traffic
-    environment:
-      name: auto_rollout_50pct_traffic
+  validate_latency_within_threshold_10pct_traffic:    
     #name: validate_latency_within_threshold
     runs-on: ubuntu-latest
     steps:
