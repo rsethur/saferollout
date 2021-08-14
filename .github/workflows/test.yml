@@ -16,7 +16,7 @@ jobs:
           echo "RESOURCE_ID=$RESOURCE_ID" >> $GITHUB_ENV
           echo resid $RESOURCE_ID
       - run: |
-          echo interval: ${{ env.METRICS_VALIDATION_INTERVAL_MINS }}
+          echo interval: ${{ secrets.METRICS_VALIDATION_INTERVAL_MINS }}
       # Validate latency within threshold 
       - name: Validate latency within threshold 
         uses: rsethur/validate-metrics@v1.0.44
@@ -28,7 +28,7 @@ jobs:
           aggregation: Average
           metrics_condition: lte
           interval: PT1M
-          num_intervals: ${{ env.METRICS_VALIDATION_INTERVAL_MINS }} # The environment auto_rollout_50pct_traffic has wait time of 5 mins
+          num_intervals: ${{ secrets.METRICS_VALIDATION_INTERVAL_MINS }} # The environment auto_rollout_50pct_traffic has wait time of 5 mins
           filter: "deployment eq '${{ env.RC_DEPLOYMENT_NAME }}'"
           threshold: 30
           resource_id: ${{ env.RESOURCE_ID }}
