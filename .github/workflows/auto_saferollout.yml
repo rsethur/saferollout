@@ -97,6 +97,9 @@ jobs:
       name: auto_rollout_50pct_traffic
     runs-on: ubuntu-latest
     steps:
+      - run: |
+          export RESOURCE_ID=$(az ml endpoint show -n ${{secrets.ENDPOINT_NAME }} -o tsv --query "id")
+          echo rrr $RESOURCE_ID
     # Validate there are no errors(10% traffic)
       - name: Validate there are no errors(10% traffic)
         uses: rsethur/validate-metrics@v1.0.44
@@ -111,7 +114,7 @@ jobs:
           num_intervals: 2 # The environment auto_rollout_50pct_traffic has wait time of 5 mins
           filter: "deployment eq 'green' and statusCodeClass ne '2xx'"
           threshold: 0
-          resource_id: ${{ env.resource_id }}
+          resource_id: ${{ env.RESOURCE_ID }}
         env:
           AZURE_CREDENTIALS: ${{secrets.AZURE_TOKEN}}
  
@@ -119,11 +122,15 @@ jobs:
     needs: rollout_10pct_traffic
     environment:
       name: auto_rollout_50pct_traffic
-    #name: validate_errors_within_threshold
+    #name: validate_latency_within_threshold
     runs-on: ubuntu-latest
     steps:
-      # Validate latency within threshold (10% traffic)
-      - name: Validate there are no errors(10% traffic)
+      - run: |
+          export RESOURCE_ID=$(az ml endpoint show -n ${{secrets.ENDPOINT_NAME }} -o tsv --query "id")
+      - run: |
+          echo resource_id: ${{ env.RESOURCE_ID }}
+      # Validate latency within threshold 
+      - name: Validate latency within threshold 
         uses: rsethur/validate-metrics@v1.0.44
         continue-on-error: false
         with:
@@ -136,7 +143,7 @@ jobs:
           num_intervals: 2 # The environment auto_rollout_50pct_traffic has wait time of 5 mins
           filter: "deployment eq 'green' and statusCodeClass ne '2xx'"
           threshold: 30
-          resource_id: ${{ env.resource_id }}
+          resource_id: ${{ env.RESOURCE_ID }}
         env:
           AZURE_CREDENTIALS: ${{secrets.AZURE_TOKEN}}
 
