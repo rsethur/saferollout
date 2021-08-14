@@ -99,6 +99,7 @@ jobs:
     steps:
       - run: |
           export RESOURCE_ID=/subscriptions/${{secrets.SUBSCRIPTION_ID}}/resourceGroups/${{secrets.RESOURCE_GROUP}}/providers/Microsoft.MachineLearningServices/workspaces/${{secrets.AML_WORKSPACE}}/onlineEndpoints/${{secrets.ENDPOINT_NAME}}          
+          echo "RESOURCE_ID=$RESOURCE_ID" >> $GITHUB_ENV
     # Validate there are no errors(10% traffic)
       - name: Validate there are no errors(10% traffic)
         uses: rsethur/validate-metrics@v1.0.44
@@ -131,6 +132,7 @@ jobs:
     steps:
       - run: |
           export RESOURCE_ID=/subscriptions/${{secrets.SUBSCRIPTION_ID}}/resourceGroups/${{secrets.RESOURCE_GROUP}}/providers/Microsoft.MachineLearningServices/workspaces/${{secrets.AML_WORKSPACE}}/onlineEndpoints/${{secrets.ENDPOINT_NAME}}
+          echo "RESOURCE_ID=$RESOURCE_ID" >> $GITHUB_ENV
           echo resid $RESOURCE_ID
       - run: |
           echo resource_id: ${{ env.RESOURCE_ID }}
