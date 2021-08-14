@@ -3,7 +3,7 @@ on:
   workflow_dispatch:
 
 env:
-  RC_DEPLOYMENT_NAME: run24
+  RC_DEPLOYMENT_NAME: run14
 jobs: 
   validate_latency_within_threshold_10pct_traffic:    
     name: validate error
