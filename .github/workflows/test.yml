@@ -6,7 +6,7 @@ env:
   RC_DEPLOYMENT_NAME: run24
 jobs: 
   validate_latency_within_threshold_10pct_traffic:    
-    #name: validate_latency_within_threshold
+    name: validate latency @ 10% traffic
     runs-on: ubuntu-latest
     steps:
       - run: |

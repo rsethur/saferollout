@@ -10,7 +10,7 @@ env:
 jobs:
   
   rollout_10pct_traffic:
-    name: rollout_10pct_traffic
+    name: rollout 10pct traffic
     runs-on: ubuntu-latest
     if: ${{ github.event.workflow_run.conclusion == 'success' || github.event_name == 'workflow_dispatch'}}
     steps:
@@ -90,75 +90,6 @@ jobs:
         # run some tests
         # TODO - insert test script here
 
-  validate_errors_within_threshold_10pct_traffic:
-    needs: rollout_10pct_traffic
-    #name: validate_errors_within_threshold
-    environment:
-      name: auto_rollout_50pct_traffic
-    runs-on: ubuntu-latest
-    steps:
-      - run: |
-          export RESOURCE_ID=/subscriptions/${{secrets.SUBSCRIPTION_ID}}/resourceGroups/${{secrets.RESOURCE_GROUP}}/providers/Microsoft.MachineLearningServices/workspaces/${{secrets.AML_WORKSPACE}}/onlineEndpoints/${{secrets.ENDPOINT_NAME}}          
-          echo "RESOURCE_ID=$RESOURCE_ID" >> $GITHUB_ENV
-    # Validate there are no errors(10% traffic)
-      - name: Validate there are no errors(10% traffic)
-        uses: rsethur/validate-metrics@v1.0.44
-        continue-on-error: false
-        with:
-          chart_name: "Validate errors (10pct traffic)"
-          chart_save_path: "/home/runner/chart-output/"
-          metric: RequestsPerMinute
-          aggregation: Average
-          metrics_condition: lte
-          interval: PT1M
-          num_intervals: 2 # The environment auto_rollout_50pct_traffic has wait time of 5 mins
-          filter: "deployment eq '${{ env.RC_DEPLOYMENT_NAME }}' and statusCodeClass ne '2xx'"
-          threshold: 0
-          resource_id: ${{ env.RESOURCE_ID }}
-        env:
-          AZURE_CREDENTIALS: ${{secrets.AZURE_TOKEN}}
-      # Upload the chart as an artifact to the workflow run
-      - uses: actions/upload-artifact@v2
-        with:
-          name: validate-errors-at-10pct_traffic
-          path: "/home/runner/chart-output/"      
- 
-  validate_latency_within_threshold_10pct_traffic:
-    needs: rollout_10pct_traffic
-    environment:
-      name: auto_rollout_50pct_traffic
-    #name: validate_latency_within_threshold
-    runs-on: ubuntu-latest
-    steps:
-      - run: |
-          export RESOURCE_ID=/subscriptions/${{secrets.SUBSCRIPTION_ID}}/resourceGroups/${{secrets.RESOURCE_GROUP}}/providers/Microsoft.MachineLearningServices/workspaces/${{secrets.AML_WORKSPACE}}/onlineEndpoints/${{secrets.ENDPOINT_NAME}}
-          echo "RESOURCE_ID=$RESOURCE_ID" >> $GITHUB_ENV
-          echo resid $RESOURCE_ID
-      - run: |
-          echo resource_id: ${{ env.RESOURCE_ID }}
-      # Validate latency within threshold 
-      - name: Validate latency within threshold 
-        uses: rsethur/validate-metrics@v1.0.44
-        continue-on-error: false
-        with:
-          chart_name: "Validate latency (10pct traffic)"
-          chart_save_path: "/home/runner/chart-output/"
-          metric: RequestLatency_P90
-          aggregation: Average
-          metrics_condition: lte
-          interval: PT1M
-          num_intervals: 2 # The environment auto_rollout_50pct_traffic has wait time of 5 mins
-          filter: "deployment eq '${{ env.RC_DEPLOYMENT_NAME }}'"
-          threshold: 30
-          resource_id: ${{ env.RESOURCE_ID }}
-        env:
-          AZURE_CREDENTIALS: ${{secrets.AZURE_TOKEN}}
-      # Upload the chart as an artifact to the workflow run
-      - uses: actions/upload-artifact@v2
-        with:
-          name: validate-latency-at-10pct_traffic
-          path: "/home/runner/chart-output/"      
-
   rollout_50pct_traffic:
     needs: [validate_errors_within_threshold_10pct_traffic, validate_latency_within_threshold_10pct_traffic]
     name: rollout_50pct_traffic    
@@ -185,11 +116,8 @@ jobs:
           az ml endpoint update -n ${{secrets.ENDPOINT_NAME }} --traffic $PROD_DEPLOYMENT:50,${{ env.RC_DEPLOYMENT_NAME }}:50
 
   rollout_100pct_traffic:
-    needs: rollout_50pct_traffic
-    name: rollout_100pct_traffic
-    environment:
-      name: rollout_100pct_traffic
-      url: http://ml.azure.com
+    needs: [validate_errors_within_threshold_50pct_traffic, validate_latency_within_threshold_50pct_traffic]
+    name: rollout_100pct_traffic    
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -211,10 +139,8 @@ jobs:
           az ml endpoint update -n ${{secrets.ENDPOINT_NAME }} --traffic $PROD_DEPLOYMENT:0,${{ env.RC_DEPLOYMENT_NAME }}:100 --set tags.PROD_DEPLOYMENT=${{ env.RC_DEPLOYMENT_NAME }} tags.OLD_PROD_DEPLOYMENT=$PROD_DEPLOYMENT
 
   delete_old_prod:
-    needs: rollout_100pct_traffic
+    needs: [validate_errors_within_threshold_100pct_traffic, validate_latency_within_threshold_100pct_traffic]
     name: delete_old_prod
-    environment:
-      name: delete_old_prod
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -235,3 +161,70 @@ jobs:
           export OLD_PROD_DEPLOYMENT=$(az ml endpoint show -n ${{secrets.ENDPOINT_NAME }} -o tsv --query "tags.OLD_PROD_DEPLOYMENT")          
           az ml endpoint delete -n ${{secrets.ENDPOINT_NAME }} --deployment $OLD_PROD_DEPLOYMENT --yes #--no-wait
           az ml endpoint update -n ${{secrets.ENDPOINT_NAME }} --remove tags.OLD_PROD_DEPLOYMENT
+
+  ############## auto validation of metrics ################
+  validate_errors_within_threshold_10pct_traffic:
+    needs: rollout_10pct_traffic
+    #name: validate_errors_within_threshold
+    environment:
+      name: auto_rollout_50pct_traffic
+    runs-on: ubuntu-latest
+    steps:
+      - run: |
+          export RESOURCE_ID=/subscriptions/${{secrets.SUBSCRIPTION_ID}}/resourceGroups/${{secrets.RESOURCE_GROUP}}/providers/Microsoft.MachineLearningServices/workspaces/${{secrets.AML_WORKSPACE}}/onlineEndpoints/${{secrets.ENDPOINT_NAME}}          
+          echo "RESOURCE_ID=$RESOURCE_ID" >> $GITHUB_ENV
+    # Validate there are no errors(10% traffic)
+      - name: Validate errors within theshold
+        uses: rsethur/validate-metrics@v1.0.44
+        continue-on-error: false
+        with:
+          chart_name: "Validate errors (10pct traffic)"
+          chart_save_path: "/home/runner/chart-output/error"
+          metric: RequestsPerMinute
+          aggregation: Average
+          metrics_condition: lte
+          interval: PT1M
+          num_intervals: 2 # The environment auto_rollout_50pct_traffic has wait time of 5 mins
+          filter: "deployment eq '${{ env.RC_DEPLOYMENT_NAME }}' and statusCodeClass ne '2xx'"
+          threshold: 0
+          resource_id: ${{ env.RESOURCE_ID }}
+        env:
+          AZURE_CREDENTIALS: ${{secrets.AZURE_TOKEN}}
+      # Upload the chart as an artifact to the workflow run
+      - uses: actions/upload-artifact@v2
+        with:
+          name: validate-errors-at-10pct_traffic
+          path: "/home/runner/chart-output/error"      
+ 
+  validate_latency_within_threshold_10pct_traffic:
+    needs: rollout_10pct_traffic
+    environment:
+      name: auto_rollout_50pct_traffic
+    #name: validate_latency_within_threshold
+    runs-on: ubuntu-latest
+    steps:
+      - run: |
+          export RESOURCE_ID=/subscriptions/${{secrets.SUBSCRIPTION_ID}}/resourceGroups/${{secrets.RESOURCE_GROUP}}/providers/Microsoft.MachineLearningServices/workspaces/${{secrets.AML_WORKSPACE}}/onlineEndpoints/${{secrets.ENDPOINT_NAME}}
+          echo "RESOURCE_ID=$RESOURCE_ID" >> $GITHUB_ENV
+      # Validate latency within threshold 
+      - name: Validate latency within threshold 
+        uses: rsethur/validate-metrics@v1.0.44
+        continue-on-error: false
+        with:
+          chart_name: "Validate latency (10pct traffic)"
+          chart_save_path: "/home/runner/chart-output/latency"
+          metric: RequestLatency_P90
+          aggregation: Average
+          metrics_condition: lte
+          interval: PT1M
+          num_intervals: 2 # The environment auto_rollout_50pct_traffic has wait time of 5 mins
+          filter: "deployment eq '${{ env.RC_DEPLOYMENT_NAME }}'"
+          threshold: 30
+          resource_id: ${{ env.RESOURCE_ID }}
+        env:
+          AZURE_CREDENTIALS: ${{secrets.AZURE_TOKEN}}
+      # Upload the chart as an artifact to the workflow run
+      - uses: actions/upload-artifact@v2
+        with:
+          name: validate-latency-at-10pct_traffic
+          path: "/home/runner/chart-output/latency" 
