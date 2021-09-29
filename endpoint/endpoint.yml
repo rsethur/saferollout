@@ -1,4 +1,3 @@
 $schema: https://azuremlschemas.azureedge.net/latest/managedOnlineEndpoint.schema.json
 name: demo-endpt
-type: online
 auth_mode: key

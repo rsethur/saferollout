@@ -1,0 +1,29 @@
+name: simple-rollout
+on: 
+  workflow_dispatch
+
+jobs:  
+  simple-rollout:
+    runs-on: ubuntu-latest
+    steps:
+    - name: azure login
+      uses: azure/login@v1
+      with:
+        creds: ${{secrets.AZURE_CREDENTIALS}}
+    - run: |
+          az config set defaults.workspace=${{secrets.AML_WORKSPACE}}
+          az config set defaults.group=${{secrets.RESOURCE_GROUP}}          
+          az account set -s ${{secrets.SUBSCRIPTION_ID}}  
+    
+    - name: Install azureml cli extension
+      run: az extension add --source https://azuremlsdktestpypi.blob.core.windows.net/wheels/sdk-cli-v2/ml-0.0.15_october_cand-py3-none-any.whl --yes
+      #run: az extension add -n ml -y
+    
+    - name: Checkout
+      uses: actions/checkout@v2.3.3
+
+    - name: Run the rollout shell script
+      run: bash -ex scripts/simple_rollout.sh
+      env:
+        ENDPOINT_NAME: simple-${{secrets.ENDPOINT_NAME }}
+        
