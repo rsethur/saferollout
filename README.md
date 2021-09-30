@@ -1,5 +1,6 @@
-![Simple rollout](https://github.com/rsethur/sr/workflows/simple-rollout/badge.svg)
-![Auto safe rollout](https://github.com/rsethur/sr/workflows/auto-saferollout/badge.svg)
+[![simple-rollout](https://github.com/rsethur/saferollout/actions/workflows/simple_rollout.yml/badge.svg)](https://github.com/rsethur/saferollout/actions/workflows/simple_rollout.yml)
+[![auto-saferollout](https://github.com/rsethur/saferollout/actions/workflows/auto_saferollout.yml/badge.svg)](https://github.com/rsethur/saferollout/actions/workflows/auto_saferollout.yml)
+[![train](https://github.com/rsethur/saferollout/actions/workflows/train.yml/badge.svg)](https://github.com/rsethur/saferollout/actions/workflows/train.yml)
 # Safe rollout of ML models using Azure ML Managed Online Endpoints
 
 ## User story
