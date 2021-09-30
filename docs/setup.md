@@ -12,7 +12,6 @@ Secret | Description/Instructions |
 |SUBSCRIPTION_ID | Your azure subscription id |
 |RESOURCE_GROUP | Resource group where your resources will be created. Make sure this already exists |
 | AML_WORKSPACE | Name of your azure ml workspace. Make sure this already exists. |
-| LOCATION | Azure region for your Azure ML workspace  e.g. eastus |
 | ENDPOINT_NAME | Name of the managed online endpoint that will be created part of the pipelines. This needs to be a unique value across azure region level. For e.g my-endpt-<XXXXX>, where XXXXX is a random number. |
 | ENDPOINT_TOKEN | Put any dummy value here. We get endpoint credentials into the env variable inside one of the scripts. Defining this as secret ensures it is not accidentally printed in the logs |
 

@@ -14,13 +14,14 @@ The below illustration shows how users can gradually upgrade to version n+1 of t
 
 ![Saferollout semantics](docs/imgs/saferollout-semantics.jpg)
 
-## Design of saferollout pipeline
-In the example here you will see the flow from training -> model registration -> saferollout of new model version into production. You will see how we use [validate metrics](https://github.com/rsethur/validate-metrics) github action to automate the validation of operational metrics at very step of the rollout.
+## Design of safe rollout pipeline
+In the example here you will see the flow from training -> model registration -> safe rollout of new model version into production. You will see how we use [validate metrics](https://github.com/rsethur/validate-metrics) github action to automate the validation of operational metrics at very step of the rollout.
 
 ![Saferollout pipeline design](docs/imgs/pipeline-design.png)
 
 ## Annotated output of the safe rollout pipeline
-This is how the output of the safe rollout run in this repo looks like.
+This is how the output of the safe rollout run in this repo looks like. Every validation gate has a 5 min wait timer (configurable). As part of the protection rules you can also enable human approval.
+
 ![Saferollout GH action pipeline](docs/imgs/ghaction.png)
 
 ## Getting started
