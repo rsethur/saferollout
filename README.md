@@ -6,7 +6,7 @@
 ## User story
 *"As an ML engineer, I want to use __devops pipelines__ to __safely rollout new version of a model__ in production __with validation gates__ inorder to __maintain production SLA__ and efficiently manage the rollout process"*
 
-This repo shows how you can automate the rollout of a new version of a model into production without distruption.
+This repo shows how you can automate the rollout of a new version of a model into production without distruption. It also shows how you can do __auto safe rollout__ by automatically validating if metrics are within threshiold in the release/validation gates.
 
 ## Semantics of safe rollout
 
@@ -19,8 +19,8 @@ In the example here you will see the flow from training -> model registration ->
 
 ![Saferollout pipeline design](docs/imgs/pipeline-design.png)
 
-## Annotated output of the safe rollout pipeline
-This is how the output of the safe rollout run in this repo looks like. Every validation gate has a 5 min wait timer (configurable). As part of the protection rules you can also enable human approval.
+## Annotated output of auto safe rollout pipeline
+This is how the output of the auto safe rollout run in this repo looks like. Every validation gate has a 5 min wait timer (configurable). As part of the protection rules you can also enable human approval.
 
 ![Saferollout GH action pipeline](docs/imgs/ghaction.png)
 
