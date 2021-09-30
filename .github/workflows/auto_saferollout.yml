@@ -201,8 +201,8 @@ jobs:
   ############## auto validation of metrics ################
   validate_errors_within_threshold_10pct_traffic:
     needs: rollout_10pct_traffic
-    name: Validate errors within threshold @ 10% traffic
-    environment: auto_rollout_50pct_traffic
+    name: Validate errors within threshold @ 10% traffic    
+    environment: 50pct_traffic_release_gate
     runs-on: ubuntu-latest
     steps:
       - run: |
@@ -234,7 +234,7 @@ jobs:
   validate_errors_within_threshold_50pct_traffic:
     needs: rollout_50pct_traffic
     name: Validate errors within threshold @ 50% traffic
-    environment: auto_rollout_100pct_traffic
+    environment: 100pct_traffic_release_gate
     runs-on: ubuntu-latest
     steps:
       - run: |
@@ -266,7 +266,7 @@ jobs:
   validate_errors_within_threshold_100pct_traffic:
     needs: rollout_100pct_traffic
     name: Validate errors within threshold @ 100% traffic
-    environment: delete_old_prod_env
+    environment: delete_old_prod_release_gate
     runs-on: ubuntu-latest
     steps:
       - run: |
@@ -298,7 +298,7 @@ jobs:
 
   validate_latency_within_threshold_10pct_traffic:
     needs: rollout_10pct_traffic
-    environment: rollout_50pct_traffic_env
+    environment: 50pct_traffic_release_gate
     name: Validate latency within threshold @ 10% traffic
     runs-on: ubuntu-latest
     steps:
@@ -330,8 +330,7 @@ jobs:
 
   validate_latency_within_threshold_50pct_traffic:
     needs: rollout_50pct_traffic
-    environment:
-      name: rollout_100pct_traffic_env
+    environment: 100pct_traffic_release_gate
     name: Validate latency within threshold @ 50% traffic
     runs-on: ubuntu-latest
     steps:
@@ -363,8 +362,7 @@ jobs:
 
   validate_latency_within_threshold_100pct_traffic:
     needs: rollout_100pct_traffic
-    environment:
-      name: auto_delete_old_prod
+    environment: delete_old_prod_release_gate
     name: Validate latency within threshold @ 100% traffic
     runs-on: ubuntu-latest
     steps:
