@@ -11,3 +11,5 @@ environment: azureml:AzureML-sklearn-0.24-ubuntu18.04-py37-cpu
 compute: azureml:cpu-cluster
 display_name: risk-model-job
 experiment_name: risk-model
+environment_variables:
+    AZUREML_COMPUTE_USE_COMMON_RUNTIME: "false"
