@@ -8,9 +8,40 @@
 
 This repo shows how you can automate the rollout of a new version of a model into production without distruption. It also shows how you can do __auto safe rollout__ by automatically validating if metrics are within threshiold in the release/validation gates.
 
-## Semantics of safe rollout
+## Refresher on Endpoints concept
+After you train a machine learning model, you need to deploy the model so that others can use it to perform inferencing. In Azure Machine Learning, you can use endpoints and deployments to do so.
 
-The below illustration shows how users can gradually upgrade to version n+1 of the model from the currently running version n. At every step it is a good practice to validate that operational metrics are all within threshold (e.g. response time tail latencies , #errors etc). 
+![Endpoint concept](docs/imgs/endpoint-concept.png)
+
+An __endpoint__ is an HTTPS endpoint that clients can call to receive the inferencing (scoring) output of a trained model. It provides:
+
+* Authentication using key & token based auth
+* SSL termination
+* Traffic allocation between deployments
+* A stable scoring URI (`endpoint-name.region.inference.ml.azure.com`)
+
+A **deployment** is a set of compute resources hosting the model that performs the actual inferencing. It contains:
+
+* Model details (code, model, environment)
+* Compute resource and scale settings
+* Advanced settings (like request and probe settings)
+
+You can learn more about this [here](https://docs.microsoft.com/en-us/azure/machine-learning/concept-endpoints)
+
+## Safe rollout concept
+
+The below illustration shows how users can gradually upgrade to version n+1 of the model from the currently running version n. At every step it is a good practice to validate that operational metrics are all within threshold (e.g. response time tail latencies , #errors etc). We have implemented this in this repo.
+
+![Saferollout process](docs/imgs/saferollout-concept.jpg)
+
+## Safe rollout Semantics
+
+Deployment can be of three types:
+* `PROD_DEPLOYMENT`: As the name suggests, the main model version serving prod traffic
+* Release candidate: The new version of the model that you want to test before making it the production model.
+* `OLD_PROD`: You might want to keep the last known good model for a while before deleting it.
+
+We use tags to keep track of the deplpoyment types. You can additional tags to track for e.g. experimental models that you might have.
 
 ![Saferollout semantics](docs/imgs/saferollout-semantics.jpg)
 
