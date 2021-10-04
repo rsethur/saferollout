@@ -34,6 +34,16 @@ The below illustration shows how users can gradually upgrade to a new version of
 
 ![Saferollout process](docs/imgs/saferollout-concept.jpg)
 
+## Design of safe rollout pipeline
+In the example here you will see the flow from training -> model registration -> safe rollout of new model version into production. You will see how we use [validate metrics](https://github.com/rsethur/validate-metrics) github action to automate the validation of operational metrics at very step of the rollout.
+
+![Saferollout pipeline design](docs/imgs/pipeline-design.png)
+
+## Annotated output of auto safe rollout pipeline
+This is how the output of the auto safe rollout run in this repo looks like. Every validation gate has a 5 min wait timer (configurable). As part of the protection rules you can also enable human approval.
+
+![Saferollout GH action pipeline](docs/imgs/ghaction.png)
+
 ## Safe rollout semantics
 
 It is important to have clean set of semantics so that users share same vocabulary while implementing non trivial ci/cd pipelines. We use tags to keep track of the deployment types.
@@ -44,20 +54,6 @@ Deployment can be of three types:
 * Release candidate: The new version of the model that you want to test before making it the production model. In the example in this repo since we have only one release candidate, we can get away without tagging this explicitly since we know the deployment name (we generate a unique name at the beginning of the ci/cd script). Good idea to tag this if you want to explicitly track this.
 
 You can add additional tags to track for e.g. experimental models that you might have.
-
-![Saferollout semantics](docs/imgs/saferollout-semantics.jpg)
-
-In the above diagram, the columns indicate the timeperiods (T<sub>0</sub>, T<sub>1</sub> etc). The rows has the deployment versions. At T<sub>0</sub> we have deployment V<sub>n</sub> (version n) tagged as production and has 100% traffic. At T<sub>1</sub> we have V<sub>n+1</sub> as release candidate taking 0% traffic. Gradually when it takes 100 % traffic it gets tagged as production and Vn becomes `OLD_PROD` and eventually gets deleted. We use the tags so that from the ci/cd scripts you will be able to identify the various types of deployment.
-
-## Design of safe rollout pipeline
-In the example here you will see the flow from training -> model registration -> safe rollout of new model version into production. You will see how we use [validate metrics](https://github.com/rsethur/validate-metrics) github action to automate the validation of operational metrics at very step of the rollout.
-
-![Saferollout pipeline design](docs/imgs/pipeline-design.png)
-
-## Annotated output of auto safe rollout pipeline
-This is how the output of the auto safe rollout run in this repo looks like. Every validation gate has a 5 min wait timer (configurable). As part of the protection rules you can also enable human approval.
-
-![Saferollout GH action pipeline](docs/imgs/ghaction.png)
 
 ## Getting started
 Just fork this repo and [follow instructions](docs/getting-started.md) to get started.
