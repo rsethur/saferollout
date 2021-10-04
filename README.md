@@ -55,6 +55,10 @@ Deployment can be of three types:
 
 You can add additional tags to track for e.g. experimental models that you might have.
 
+![Saferollout semantics](docs/imgs/saferollout-semantics.jpg)
+
+In the above diagram, the columns indicate the timeperiods (T<sub>0</sub>, T<sub>1</sub> etc). The rows has the deployment versions. At T<sub>0</sub> we have deployment V<sub>n</sub> (version n) tagged as production and has 100% traffic. At T<sub>1</sub> we have V<sub>n+1</sub> as release candidate taking 0% traffic. Gradually when it takes 100 % traffic it gets tagged as production and Vn becomes `OLD_PROD` and eventually gets deleted. We use the tags so that from the ci/cd scripts you will be able to identify the various types of deployment.
+
 ## Getting started
 Just fork this repo and [follow instructions](docs/getting-started.md) to get started.
 
