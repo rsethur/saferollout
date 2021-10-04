@@ -30,20 +30,24 @@ You can learn more about this [here](https://docs.microsoft.com/en-us/azure/mach
 
 ## Safe rollout concept
 
-The below illustration shows how users can gradually upgrade to version n+1 of the model from the currently running version n. At every step it is a good practice to validate that operational metrics are all within threshold (e.g. response time tail latencies , #errors etc). We have implemented this in this repo.
+The below illustration shows how users can gradually upgrade to a new version of the model in a new deployment V<sub>n+1</sub> from the currently running version in deployment V<sub>n</sub>. At every step it is a good practice to validate that operational metrics are all within threshold (e.g. response time tail latencies , #errors etc) before opening up more traffic. We have implemented this in this repo.
 
 ![Saferollout process](docs/imgs/saferollout-concept.jpg)
 
-## Safe rollout Semantics
+## Safe rollout semantics
+
+It is important to have clean set of semantics so that users share same vocabulary while implementing non trivial ci/cd pipelines. We use tags to keep track of the deployment types.
 
 Deployment can be of three types:
 * `PROD_DEPLOYMENT`: As the name suggests, the main model version serving prod traffic
-* Release candidate: The new version of the model that you want to test before making it the production model.
 * `OLD_PROD`: You might want to keep the last known good model for a while before deleting it.
+* Release candidate: The new version of the model that you want to test before making it the production model. In the example in this repo since we have only one release candidate, we can get away without tagging this explicitly since we know the deployment name (we generate a unique name at the beginning of the ci/cd script). Good idea to tag this if you want to explicitly track this.
 
-We use tags to keep track of the deplpoyment types. You can additional tags to track for e.g. experimental models that you might have.
+You can add additional tags to track for e.g. experimental models that you might have.
 
 ![Saferollout semantics](docs/imgs/saferollout-semantics.jpg)
+
+In the above diagram, the columns indicate the timeperiods (T<sub>0</sub>, T<sub>1</sub> etc). The rows has the deployment versions. At T<sub>0</sub> we have deployment V<sub>n</sub> (version n) tagged as production and has 100% traffic. At T<sub>1</sub> we have V<sub>n+1</sub> as release candidate taking 0% traffic. Gradually when it takes 100 % traffic it gets tagged as production and Vn becomes `OLD_PROD` and eventually gets deleted. We use the tags so that from the ci/cd scripts you will be able to identify the various types of deployment.
 
 ## Design of safe rollout pipeline
 In the example here you will see the flow from training -> model registration -> safe rollout of new model version into production. You will see how we use [validate metrics](https://github.com/rsethur/validate-metrics) github action to automate the validation of operational metrics at very step of the rollout.
