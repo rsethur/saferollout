@@ -33,7 +33,7 @@ jobs:
         az config set defaults.group=${{secrets.RESOURCE_GROUP}}
         az account set -s ${{secrets.SUBSCRIPTION_ID}}  
     - name: Install azureml cli extension
-      run: az extension add --source https://azuremlsdktestpypi.blob.core.windows.net/wheels/sdk-cli-v2/ml-0.0.15_october_cand-py3-none-any.whl --yes
+      run: az extension add -n ml -y
             
     - name: Download latest model details
       uses: dawidd6/action-download-artifact@v2      
@@ -98,7 +98,7 @@ jobs:
         az config set defaults.group=${{secrets.RESOURCE_GROUP}}
         az account set -s ${{secrets.SUBSCRIPTION_ID}}  
     - name: Install azureml cli extension
-      run: az extension add --source https://azuremlsdktestpypi.blob.core.windows.net/wheels/sdk-cli-v2/ml-0.0.15_october_cand-py3-none-any.whl --yes
+      run: az extension add -n ml -y
     - name: Step 3-Sanity test RC with zero traffic      
       run: |          
         az ml online-endpoint invoke -n ${{secrets.ENDPOINT_NAME }} --deployment ${{ env.RC_DEPLOYMENT_NAME }} --request-file endpoint/sample-request.json
@@ -121,7 +121,7 @@ jobs:
         az config set defaults.group=${{secrets.RESOURCE_GROUP}}
         az account set -s ${{secrets.SUBSCRIPTION_ID}}  
     - name: Install azureml cli extension
-      run: az extension add --source https://azuremlsdktestpypi.blob.core.windows.net/wheels/sdk-cli-v2/ml-0.0.15_october_cand-py3-none-any.whl --yes
+      run: az extension add -n ml -y
     - name: Step 3-Divert 10% traffic to RC
       run: | 
           export PROD_DEPLOYMENT=$(az ml online-endpoint show -n ${{secrets.ENDPOINT_NAME }} -o tsv --query "tags.PROD_DEPLOYMENT")
@@ -145,7 +145,7 @@ jobs:
           az account set -s ${{secrets.SUBSCRIPTION_ID}}      
       
       - name: Install azureml cli extension
-        run: az extension add --source https://azuremlsdktestpypi.blob.core.windows.net/wheels/sdk-cli-v2/ml-0.0.15_october_cand-py3-none-any.whl --yes
+        run: az extension add -n ml -y
       - name: Divert 50% traffic to RC
         run: | 
           export PROD_DEPLOYMENT=$(az ml online-endpoint show -n ${{secrets.ENDPOINT_NAME }} -o tsv --query "tags.PROD_DEPLOYMENT")
@@ -168,7 +168,7 @@ jobs:
           az config set defaults.group=${{secrets.RESOURCE_GROUP}}
           az account set -s ${{secrets.SUBSCRIPTION_ID}}
       - name: Install azureml cli extension
-        run: az extension add --source https://azuremlsdktestpypi.blob.core.windows.net/wheels/sdk-cli-v2/ml-0.0.15_october_cand-py3-none-any.whl --yes
+        run: az extension add -n ml -y
       - name: Divert 100% traffic to RC and mark RC as PROD, PROD as OLD_PROD
         run: | 
           export PROD_DEPLOYMENT=$(az ml online-endpoint show -n ${{secrets.ENDPOINT_NAME }} -o tsv --query "tags.PROD_DEPLOYMENT")          
@@ -191,7 +191,7 @@ jobs:
           az config set defaults.group=${{secrets.RESOURCE_GROUP}}
           az account set -s ${{secrets.SUBSCRIPTION_ID}}
       - name: Install azureml cli extension
-        run: az extension add --source https://azuremlsdktestpypi.blob.core.windows.net/wheels/sdk-cli-v2/ml-0.0.15_october_cand-py3-none-any.whl --yes
+        run: az extension add -n ml -y
       - name: Divert 100% traffic to RC and mark RC as PROD, PROD as OLD_PROD
         run: | 
           export OLD_PROD_DEPLOYMENT=$(az ml online-endpoint show -n ${{secrets.ENDPOINT_NAME }} -o tsv --query "tags.OLD_PROD_DEPLOYMENT")          
@@ -399,7 +399,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v2.3.3
       - name: Install azureml cli extension
-        run: az extension add --source https://azuremlsdktestpypi.blob.core.windows.net/wheels/sdk-cli-v2/ml-0.0.15_october_cand-py3-none-any.whl --yes
+        run: az extension add -n ml -y
       - name: azure login
         uses: azure/login@v1
         with:

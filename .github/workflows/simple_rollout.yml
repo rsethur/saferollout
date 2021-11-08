@@ -16,8 +16,7 @@ jobs:
           az account set -s ${{secrets.SUBSCRIPTION_ID}}  
     
     - name: Install azureml cli extension
-      run: az extension add --source https://azuremlsdktestpypi.blob.core.windows.net/wheels/sdk-cli-v2/ml-0.0.15_october_cand-py3-none-any.whl --yes
-      #run: az extension add -n ml -y
+      run: az extension add -n ml -y
     
     - name: Checkout
       uses: actions/checkout@v2.3.3

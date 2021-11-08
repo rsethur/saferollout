@@ -19,11 +19,8 @@ jobs:
           az config set defaults.group=${{secrets.RESOURCE_GROUP}}          
           az account set -s ${{secrets.SUBSCRIPTION_ID}}  
     - name: Install azureml cli extension
-      run: az extension add --source https://azuremlsdktestpypi.blob.core.windows.net/wheels/sdk-cli-v2/ml-0.0.15_october_cand-py3-none-any.whl --yes
-      #run: az extension add -n ml -y
-    #- name: Create azureml workspace if it does not exist
-    #  run: az ml workspace create -n ${{secrets.AML_WORKSPACE}} --location ${{secrets.LOCATION}}
-    #  continue-on-error: true
+      run: az extension add -n ml -y
+
     ### OPTIONAL ###
     #- name: "Create Log Analytics workspace (if it does not exist)"
     #  run: az monitor log-analytics workspace create --workspace-name ${{secrets.LA_WORKSPACE}} --location ${{secrets.LA_LOCATION}} --retention-time 730  --sku pergb2018 
