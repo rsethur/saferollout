@@ -4,6 +4,11 @@ on:
   workflow_run:
     workflows: ["train"]
     types: [completed]
+  push:
+    branches:
+      - main
+    paths:
+      - endpoint/
 
 env:
   RC_DEPLOYMENT_NAME: run${{ github.run_number }}
