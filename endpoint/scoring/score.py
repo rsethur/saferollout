@@ -8,11 +8,10 @@ import pandas as pd
 
 def init():
     global model
-    # construct model path
+    # construct the model path
     model_path = os.path.join(os.getenv("AZUREML_MODEL_DIR"), "outputs", "risk_model.joblib")    
     # deserialize the model file back into a sklearn model
-    model = joblib.load(model_path)
-    logging.info("Model loaded successfully!")
+    model = joblib.load(model_path)    
     logging.info("Init complete")
 
 
