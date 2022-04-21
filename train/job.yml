@@ -5,7 +5,7 @@ command: >-
   --dataset ${{inputs.credit_dataset}}
 inputs:
   credit_dataset:
-    type: uri_folder
+    type: uri_file
     path: azureml:credit-dataset:1
 environment: azureml:AzureML-sklearn-0.24-ubuntu18.04-py37-cpu:1
 compute: azureml:cpu-cluster
