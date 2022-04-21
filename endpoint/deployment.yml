@@ -1,8 +1,7 @@
 name: blue
 model: azureml:risk-model:1
 code_configuration:      
-  code: 
-    local_path: scoring/
+  code: scoring/
   scoring_script: score.py    
 environment: 
   conda_file: environment/conda.yml
