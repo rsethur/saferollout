@@ -27,6 +27,6 @@ jobs:
     - name: Checkout
       uses: actions/checkout@v2.3.3
     - name: Create dataset
-      run: az ml dataset create -n credit-dataset -l dataset/german_credit_data.csv
+      run: az ml data create -n credit-dataset --path dataset/german_credit_data.csv --type uri_file
     - name: Create training cluster
       run: az ml compute create -n ${{ env.TRAINING_CLUSTER }} --type amlcompute --min-instances 0 --max-instances 5

@@ -35,10 +35,8 @@ jobs:
 
     - name: Register model
       run: |
-        # download the job output
-        az ml job download -n $TRAINING_JOB -p run-outputs        
-        # register model
-        MODEL_VERSION=$(az ml model create -n ${{ env.MODEL_NAME }} -l run-outputs/$TRAINING_JOB/outputs/ | jq -r .version)
+        # register the model
+        MODEL_VERSION=$(az ml model create -n ${{ env.MODEL_NAME }} --path "azureml://jobs/$TRAINING_JOB/outputs/artifacts/outputs/" --type uri_folder | jq -r .version)        
         #write model name and version to file
         export MODEL_NAME_WITH_VERSION=azureml:${{ env.MODEL_NAME }}:$MODEL_VERSION
         echo $MODEL_NAME_WITH_VERSION > latest-model.txt
